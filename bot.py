@@ -273,8 +273,7 @@ def callback_select_city_menu(call):
 @bot.callback_query_handler(func=lambda call: call.data == "input_custom_city")
 def callback_input_custom_city(call):
     user_id = call.from_user.id
-    user_states[user_id] =
- {"step": "waiting_custom_city_name"}
+    user_states[user_id] = {"step": "waiting_custom_city_name"}
     bot.send_message(call.message.chat.id, "🏙 **Напишите название вашего города в ответном сообщении:**\n*(Например: Тюмень, Сочи, Барнаул)*")
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("set_city_"))
