@@ -1,15 +1,47 @@
 import os
+import sys
 import sqlite3
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
+from http.server import HTTPServer, BaseHTTPRequestHandler
 import telebot
 from telebot import types
 
-# [ Блок веб-сервера и настроек как в предыдущем коде ... ]
-# ⚠️ ОБЯЗАТЕЛЬНО УКАЖИТЕ ВАШ ADMIN_ID
-ADMIN_ID = 8725167633
+# =====================================================================
+# 1. ВЕБ-СЕРВЕР ДЛЯ RENDER (ГАРАНТИРОВАННОЕ ОТКРЫТИЕ ПОРТА)
+# =====================================================================
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"OK")
+    def log_message(self, *args): 
+        return
 
-bot = telebot.TeleBot(os.environ.get("TELEGRAM_BOT_TOKEN"), threaded=True)
+def run_server():
+    port = int(os.environ.get("PORT", 10000))
+    server = HTTPServer(("0.0.0.0", port), HealthHandler)
+    server.serve_forever()
+
+threading.Thread(target=run_server, daemon=True).start()
+
+# =====================================================================
+# 2. ПРОВЕРКА ТОКЕНА И НАСТРОЙКИ
+# =====================================================================
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+if not TELEGRAM_TOKEN:
+    print("[ERROR] TELEGRAM_BOT_TOKEN is not set in Environment variables!")
+    # Не падаем сразу, чтобы веб-сервер успел ответить Render
+    import time
+    while True:
+        time.sleep(10)
+
+# ⚠️ ВСТАВЬТЕ СЮДА ВАШ ТЕЛЕГРАМ ID
+ADMIN_ID = 8725167633 
+OFFER_URL = "https://telegra.ph"
+
+bot = telebot.TeleBot(TELEGRAM_TOKEN, threaded=True)
 db_lock = threading.Lock()
 
 # Список ниш
